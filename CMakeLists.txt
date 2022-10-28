@@ -26,6 +26,7 @@ endif()
 option(BUILD_GSTREAMER_PLUGIN "Build kvssink GStreamer plugin" OFF)
 option(BUILD_JNI "Build C++ wrapper for JNI to expose the functionality to Java/Android" OFF)
 option(BUILD_STATIC "Build with static linkage" OFF)
+option(BUILD_PIC "Build position independent code (-fPIC)" OFF)
 option(ADD_MUCLIBC "Add -muclibc c flag" OFF)
 option(BUILD_DEPENDENCIES "Whether or not to build depending libraries from source" ON)
 option(BUILD_OPENSSL_PLATFORM "If buildng OpenSSL what is the target platform" OFF)
@@ -137,6 +138,10 @@ else()
   set(Log4cplus ${LOG4CPLUS_LIBRARIES})
 endif()
 
+if(BUILD_PIC)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
 if (WIN32)
   set(PKG_CONFIG_EXECUTABLE "C:\\gstreamer\\1.0\\x86_64\\bin\\pkg-config.exe")
 endif()
@@ -192,7 +197,7 @@ include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/JNI/include)
 add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
 
 target_link_libraries(KinesisVideoProducer
-  PRIVATE 
+  PUBLIC 
     kvsCommonCurl
     cproducer
     ${Log4cplus}
