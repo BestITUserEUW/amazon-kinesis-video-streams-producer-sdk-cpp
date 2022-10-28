@@ -192,7 +192,7 @@ include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/JNI/include)
 add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
 
 target_link_libraries(KinesisVideoProducer
-  PUBLIC 
+  PRIVATE 
     kvsCommonCurl
     cproducer
     ${Log4cplus}
