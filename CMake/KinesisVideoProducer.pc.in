@@ -7,5 +7,5 @@ Name: libKinesisVideoProducer
 Description: KVS CPP Producer library
 Version: 0.0.0
 CFlags: -I${includedir} @PKG_CONFIG_DEFINES@
-Libs: -L${libdir} -lKinesisVideoProducer -lcproducer -llog4cplus -lcurl
+Libs: -L${libdir} -lKinesisVideoProducer
 Requires: @PKG_CONFIG_REQUIRES@
