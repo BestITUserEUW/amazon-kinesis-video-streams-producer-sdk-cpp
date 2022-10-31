@@ -178,6 +178,8 @@ endif()
 file(GLOB PRODUCER_CPP_SOURCE_FILES "src/*.cpp" "src/common/*.cpp" "src/credential-providers/*.cpp")
 file(GLOB PIC_HEADERS "${pic_project_SOURCE_DIR}/src/*/include")
 
+add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
+
 target_include_directories(KinesisVideoProducer PUBLIC
   ${PIC_HEADERS}
   ${KinesisVideoProducerC_SOURCE_DIR}/src/include
@@ -187,8 +189,6 @@ target_include_directories(KinesisVideoProducer PUBLIC
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/credential-providers
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common
 )
-
-add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
 
 target_link_libraries(KinesisVideoProducer PUBLIC 
   kvsCommonCurl
