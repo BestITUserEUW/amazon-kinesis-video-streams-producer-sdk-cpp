@@ -180,26 +180,18 @@ file(GLOB GST_PLUGIN_SOURCE_FILES "src/gstreamer/*.cpp" "src/gstreamer/Util/*.cp
 file(GLOB_RECURSE JNI_SOURCE_FILES "src/JNI/*.cpp")
 file(GLOB PIC_HEADERS "${pic_project_SOURCE_DIR}/src/*/include")
 
-include_directories(${PIC_HEADERS})
-include_directories(${KinesisVideoProducerC_SOURCE_DIR}/src/include)
-include_directories(${OPEN_SRC_INCLUDE_DIRS})
-include_directories(${KINESIS_VIDEO_OPEN_SOURCE_SRC}/include)
-include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src)
-include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/credential-providers)
-include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common)
-include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/JNI/include)
-
 add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
 
 target_include_directories(KinesisVideoProducer PUBLIC
+  $<BUILD_INTERFACE:
   ${PIC_HEADERS}
   ${KinesisVideoProducerC_SOURCE_DIR}/src/include
   ${OPEN_SRC_INCLUDE_DIRS}
   ${KINESIS_VIDEO_OPEN_SOURCE_SRC}/include
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/credential-providers
-  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common
-  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/JNI/include
+  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common>
+  $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(KinesisVideoProducer PUBLIC 
@@ -212,6 +204,7 @@ target_link_libraries(KinesisVideoProducer PUBLIC
 install(DIRECTORY src/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" PATTERN "*.cpp" EXCLUDE)
 install(
 	TARGETS	KinesisVideoProducer
+  EXPORT KinesisVideoProducer
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
