@@ -8,14 +8,14 @@ include(Utilities)
 project(KinesisVideoProducerCpp)
 
 if (UNIX AND NOT APPLE)
-    include(GNUInstallDirs)
+  include(GNUInstallDirs)
 elseif(NOT DEFINED CMAKE_INSTALL_LIBDIR)
-    set(CMAKE_INSTALL_LIBDIR "lib")
+  set(CMAKE_INSTALL_LIBDIR "lib")
 endif()
 
 if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -191,12 +191,22 @@ include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/JNI/include)
 
 add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
 
-target_link_libraries(KinesisVideoProducer
-  PUBLIC 
-    kvsCommonCurl
-    cproducer
-    ${Log4cplus}
-    ${LIBCURL_LIBRARIES}
+target_include_directories(KinesisVideoProducer PUBLIC
+  ${PIC_HEADERS}
+  ${KinesisVideoProducerC_SOURCE_DIR}/src/include
+  ${OPEN_SRC_INCLUDE_DIRS}
+  ${KINESIS_VIDEO_OPEN_SOURCE_SRC}/include
+  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src
+  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/credential-providers
+  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common
+  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/JNI/include
+)
+
+target_link_libraries(KinesisVideoProducer PUBLIC 
+  kvsCommonCurl
+  cproducer
+  ${Log4cplus}
+  ${LIBCURL_LIBRARIES}
 )
 
 install(DIRECTORY src/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" PATTERN "*.cpp" EXCLUDE)
@@ -206,15 +216,6 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
-
-
-if(BUILD_JNI)
-  find_package(JNI REQUIRED)
-  include_directories(${JNI_INCLUDE_DIRS})
-
-  add_library(KinesisVideoProducerJNI SHARED ${JNI_HEADERS} ${JNI_SOURCE_FILES})
-  target_link_libraries(KinesisVideoProducerJNI kvspic)
-endif()
 
 if(BUILD_GSTREAMER_PLUGIN)
   pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
