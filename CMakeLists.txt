@@ -23,9 +23,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # User Flags
-option(BUILD_GSTREAMER_PLUGIN "Build kvssink GStreamer plugin" OFF)
+option(BUILD_GSTREAMER_PLUGIN "Build kvssink GStreamer plugin" ON)
 option(BUILD_JNI "Build C++ wrapper for JNI to expose the functionality to Java/Android" OFF)
-option(BUILD_STATIC "Build with static linkage" OFF)
+option(BUILD_STATIC "Build with static linkage" ON)
 option(ADD_MUCLIBC "Add -muclibc c flag" OFF)
 option(BUILD_DEPENDENCIES "Whether or not to build depending libraries from source" ON)
 option(BUILD_OPENSSL_PLATFORM "If buildng OpenSSL what is the target platform" OFF)
@@ -46,8 +46,10 @@ get_filename_component(ROOT "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 
 # static settings
 if(BUILD_STATIC)
+  set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
   set(LINKAGE STATIC)
 elseif(WIN32)
+  set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
   set(LINKAGE STATIC)
 else()
   set(LINKAGE SHARED)
@@ -66,7 +68,8 @@ endif()
 # pass ca cert location to sdk
 add_definitions(-DKVS_CA_CERT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/certs/cert.pem")
 add_definitions(-DCMAKE_DETECTED_CACERT_PATH)
-
+message(${CMAKE_CURRENT_BINARY_DIR}/dependency/libkvscproducer/kvscproducer-src)
+set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${CMAKE_CURRENT_BINARY_DIR}/dependency/libkvscproducer/kvscproducer-src")
 
 if(BUILD_DEPENDENCIES)
   if(NOT EXISTS ${KINESIS_VIDEO_OPEN_SOURCE_SRC})
@@ -75,10 +78,8 @@ if(BUILD_DEPENDENCIES)
 
   if (NOT OPEN_SRC_INSTALL_PREFIX)
     set(OPEN_SRC_INSTALL_PREFIX ${KINESIS_VIDEO_OPEN_SOURCE_SRC}/local)
-    set(ENV{PKG_CONFIG_PATH}
-          "$ENV{PKG_CONFIG_PATH}:${OPEN_SRC_INSTALL_PREFIX}/lib/pkgconfig")
+    set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${OPEN_SRC_INSTALL_PREFIX}/lib/pkgconfig")
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${OPEN_SRC_INSTALL_PREFIX})
-    set(ENV{PATH} "$ENV{PATH}:${OPEN_SRC_INSTALL_PREFIX}/bin")
   endif()
 
 
@@ -116,26 +117,11 @@ add_subdirectory(${DEPENDENCY_DOWNLOAD_PATH}/libkvscproducer/kvscproducer-src EX
 
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
+pkg_search_module(cproducer REQUIRED IMPORTED_TARGET libcproducer)
+pkg_search_module(kvsCommonCurl REQUIRED IMPORTED_TARGET libkvsCommonCurl)
+pkg_search_module(log4cplus REQUIRED IMPORTED_TARGET log4cplus)
+pkg_search_module(curl REQUIRED IMPORTED_TARGET libcurl)
 
-if (OPEN_SRC_INSTALL_PREFIX)
-  find_package(CURL REQUIRED PATHS ${OPEN_SRC_INSTALL_PREFIX})
-else()
-  find_package(CURL REQUIRED)
-endif()
-
-set(OPEN_SRC_INCLUDE_DIRS ${OPEN_SRC_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
-link_directories(${CURL_LIBRARY_DIRS})
-
-if (WIN32)
-  find_package(Log4cplus
-    NAMES log4cplus REQUIRED
-    PATHS ${OPEN_SRC_INSTALL_PREFIX}/lib)
-  SET(Log4cplus "log4cplus::log4cplus")
-else()
-  find_package(Log4cplus REQUIRED)
-  include_directories(${LOG4CPLUS_INCLUDE_DIR})
-  set(Log4cplus ${LOG4CPLUS_LIBRARIES})
-endif()
 
 if (WIN32)
   set(PKG_CONFIG_EXECUTABLE "C:\\gstreamer\\1.0\\x86_64\\bin\\pkg-config.exe")
@@ -183,24 +169,26 @@ add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
 target_include_directories(KinesisVideoProducer PUBLIC
   ${PIC_HEADERS}
   ${KinesisVideoProducerC_SOURCE_DIR}/src/include
-  ${OPEN_SRC_INCLUDE_DIRS}
   ${KINESIS_VIDEO_OPEN_SOURCE_SRC}/include
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/credential-providers
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common
 )
 
-target_link_libraries(KinesisVideoProducer PUBLIC 
-  kvsCommonCurl
-  cproducer
-  ${Log4cplus}
-  ${LIBCURL_LIBRARIES}
+target_link_libraries(KinesisVideoProducer
+PRIVATE
+  PkgConfig::kvsCommonCurl
+  PkgConfig::cproducer
+  PkgConfig::curl
+PUBLIC
+  PkgConfig::log4cplus
 )
 
 set(pkgconfig_install_dir "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 set(pkg_config "${CMAKE_BINARY_DIR}/KinesisVideoProducer.pc")
 
 install(DIRECTORY src/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" PATTERN "*.cpp" EXCLUDE)
+
 install(
     TARGETS KinesisVideoProducer
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -224,6 +212,24 @@ string(REPLACE ";" " -D" PKG_CONFIG_DEFINES "${PKG_CONFIG_DEFINES}")
 string(CONCAT PKG_CONFIG_DEFINES "-D" "${PKG_CONFIG_DEFINES}")
 configure_file("CMake/KinesisVideoProducer.pc.in" "${pkg_config}" @ONLY)
 install(FILES "${pkg_config}" DESTINATION "${pkgconfig_install_dir}")
+
+if(BUILD_GSTREAMER_PLUGIN)
+  pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
+  include_directories(${GST_APP_INCLUDE_DIRS})
+  link_directories(${GST_APP_LIBRARY_DIRS})
+
+  add_executable(kvs_gstreamer_sample samples/kvs_gstreamer_sample.cpp)
+  target_link_libraries(kvs_gstreamer_sample ${GST_APP_LIBRARIES} KinesisVideoProducer)
+
+  add_executable(kvs_gstreamer_multistream_sample samples/kvs_gstreamer_multistream_sample.cpp)
+  target_link_libraries(kvs_gstreamer_multistream_sample ${GST_APP_LIBRARIES} KinesisVideoProducer)
+
+  add_executable(kvs_gstreamer_audio_video_sample samples/kvs_gstreamer_audio_video_sample.cpp)
+  target_link_libraries(kvs_gstreamer_audio_video_sample ${GST_APP_LIBRARIES} KinesisVideoProducer)
+
+  add_executable(kvs_gstreamer_file_uploader_sample samples/kvs_gstreamer_file_uploader_sample.cpp)
+  target_link_libraries(kvs_gstreamer_file_uploader_sample ${GST_APP_LIBRARIES})
+endif()
 
 if(BUILD_TEST)
   set(ENV{KVS_GTEST_ROOT} ${KINESIS_VIDEO_OPEN_SOURCE_SRC})
