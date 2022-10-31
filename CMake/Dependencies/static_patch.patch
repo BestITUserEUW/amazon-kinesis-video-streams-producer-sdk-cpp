@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index c3f3ebf..52956a7 100644
+index c3f3ebf..c2223ae 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -15,6 +15,7 @@ option(USE_MBEDTLS "Use mbedtls as crypto library" OFF)
@@ -62,13 +62,16 @@ index c3f3ebf..52956a7 100644
  
      install(
        TARGETS kvsCommonCurl
-@@ -321,6 +334,9 @@ if(BUILD_COMMON_CURL)
-     add_executable(kvsAudioVideoStreamingSample ${KINESIS_VIDEO_PRODUCER_C_SRC}/samples/KvsAudioVideoStreamingSample.c)
-     target_link_libraries(kvsAudioVideoStreamingSample cproducer)
+@@ -315,12 +328,6 @@ if(BUILD_COMMON_CURL)
+       FILES ${CMAKE_CURRENT_BINARY_DIR}/libcproducer.pc
+       DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
  
-+    add_executable(kvsAudioOnlyStreamingSample ${KINESIS_VIDEO_PRODUCER_C_SRC}/samples/KvsAudioOnlyStreamingSample.c)
-+    target_link_libraries(kvsAudioOnlyStreamingSample cproducer)
-+
+-    add_executable(kvsVideoOnlyStreamingSample ${KINESIS_VIDEO_PRODUCER_C_SRC}/samples/KvsVideoOnlyStreamingSample.c)
+-    target_link_libraries(kvsVideoOnlyStreamingSample cproducer)
+-
+-    add_executable(kvsAudioVideoStreamingSample ${KINESIS_VIDEO_PRODUCER_C_SRC}/samples/KvsAudioVideoStreamingSample.c)
+-    target_link_libraries(kvsAudioVideoStreamingSample cproducer)
+-
      if (BUILD_TEST)
          add_subdirectory(tst)
      endif()
