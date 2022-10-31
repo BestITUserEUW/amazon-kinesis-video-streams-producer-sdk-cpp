@@ -27,7 +27,7 @@ option(BUILD_GSTREAMER_PLUGIN "Build kvssink GStreamer plugin" OFF)
 option(BUILD_JNI "Build C++ wrapper for JNI to expose the functionality to Java/Android" OFF)
 option(BUILD_STATIC "Build with static linkage" OFF)
 option(ADD_MUCLIBC "Add -muclibc c flag" OFF)
-option(BUILD_DEPENDENCIES "Whether or not to build depending libraries from source" OFF)
+option(BUILD_DEPENDENCIES "Whether or not to build depending libraries from source" ON)
 option(BUILD_OPENSSL_PLATFORM "If buildng OpenSSL what is the target platform" OFF)
 option(BUILD_LOG4CPLUS_HOST "Specify host-name for log4cplus for cross-compilation" OFF)
 
@@ -46,6 +46,7 @@ get_filename_component(ROOT "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 
 # static settings
 if(BUILD_STATIC)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
   set(LINKAGE STATIC)
 elseif(WIN32)
   set(LINKAGE STATIC)
@@ -180,20 +181,16 @@ file(GLOB GST_PLUGIN_SOURCE_FILES "src/gstreamer/*.cpp" "src/gstreamer/Util/*.cp
 file(GLOB_RECURSE JNI_SOURCE_FILES "src/JNI/*.cpp")
 file(GLOB PIC_HEADERS "${pic_project_SOURCE_DIR}/src/*/include")
 
+include_directories(${PIC_HEADERS})
+include_directories(${KinesisVideoProducerC_SOURCE_DIR}/src/include)
+include_directories(${OPEN_SRC_INCLUDE_DIRS})
+include_directories(${KINESIS_VIDEO_OPEN_SOURCE_SRC}/include)
+include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src)
+include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/credential-providers)
+include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common)
+include_directories(${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/JNI/include)
+
 add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
-
-target_include_directories(KinesisVideoProducer PUBLIC
-  $<BUILD_INTERFACE:
-  ${PIC_HEADERS}
-  ${KinesisVideoProducerC_SOURCE_DIR}/src/include
-  ${OPEN_SRC_INCLUDE_DIRS}
-  ${KINESIS_VIDEO_OPEN_SOURCE_SRC}/include
-  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src
-  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/credential-providers
-  ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common>
-  $<INSTALL_INTERFACE:include>
-)
-
 target_link_libraries(KinesisVideoProducer PUBLIC 
   kvsCommonCurl
   cproducer
@@ -203,12 +200,19 @@ target_link_libraries(KinesisVideoProducer PUBLIC
 
 install(DIRECTORY src/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" PATTERN "*.cpp" EXCLUDE)
 install(
-	TARGETS	KinesisVideoProducer
-  EXPORT KinesisVideoProducer
-	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+    TARGETS KinesisVideoProducer
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+
+if(BUILD_JNI)
+  find_package(JNI REQUIRED)
+  include_directories(${JNI_INCLUDE_DIRS})
+
+  add_library(KinesisVideoProducerJNI SHARED ${JNI_HEADERS} ${JNI_SOURCE_FILES})
+  target_link_libraries(KinesisVideoProducerJNI kvspic)
+endif()
+
 
 if(BUILD_GSTREAMER_PLUGIN)
   pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
@@ -222,16 +226,16 @@ if(BUILD_GSTREAMER_PLUGIN)
   endif()
   target_link_libraries(gstkvssink PRIVATE ${GST_APP_LIBRARIES} KinesisVideoProducer)
 
-  add_executable(kvs_gstreamer_sample ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/samples/kvs_gstreamer_sample.cpp)
+  add_executable(kvs_gstreamer_sample samples/kvs_gstreamer_sample.cpp)
   target_link_libraries(kvs_gstreamer_sample ${GST_APP_LIBRARIES} KinesisVideoProducer)
 
-  add_executable(kvs_gstreamer_multistream_sample ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/samples/kvs_gstreamer_multistream_sample.cpp)
+  add_executable(kvs_gstreamer_multistream_sample samples/kvs_gstreamer_multistream_sample.cpp)
   target_link_libraries(kvs_gstreamer_multistream_sample ${GST_APP_LIBRARIES} KinesisVideoProducer)
 
-  add_executable(kvs_gstreamer_audio_video_sample ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/samples/kvs_gstreamer_audio_video_sample.cpp)
+  add_executable(kvs_gstreamer_audio_video_sample samples/kvs_gstreamer_audio_video_sample.cpp)
   target_link_libraries(kvs_gstreamer_audio_video_sample ${GST_APP_LIBRARIES} KinesisVideoProducer)
 
-  add_executable(kvs_gstreamer_file_uploader_sample ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/samples/kvs_gstreamer_file_uploader_sample.cpp)
+  add_executable(kvs_gstreamer_file_uploader_sample samples/kvs_gstreamer_file_uploader_sample.cpp)
   target_link_libraries(kvs_gstreamer_file_uploader_sample ${GST_APP_LIBRARIES})
 endif()
 
