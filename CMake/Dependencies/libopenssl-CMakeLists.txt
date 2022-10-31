@@ -19,13 +19,16 @@ else()
 endif()
 
 include(ExternalProject)
+include(ProcessorCount)
+ProcessorCount(NUM_PROC)
+
 ExternalProject_Add(project_libopenssl
     GIT_REPOSITORY    https://github.com/openssl/openssl.git
-    GIT_TAG           OpenSSL_1_1_1g
+    GIT_TAG           openssl-3.0.5
     PREFIX            ${CMAKE_CURRENT_BINARY_DIR}/build
     CONFIGURE_COMMAND ${CONFIGURE_COMMAND}
-    BUILD_COMMAND     ${MAKE_EXE}
+    BUILD_COMMAND     ${MAKE_EXE} -j${NUM_PROC}
     BUILD_IN_SOURCE   TRUE
-    INSTALL_COMMAND   ${MAKE_EXE} install_sw
+    INSTALL_COMMAND   ${MAKE_EXE} install_sw -j${NUM_PROC}
     TEST_COMMAND      ""
 )

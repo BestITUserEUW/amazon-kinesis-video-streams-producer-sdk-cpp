@@ -10,7 +10,7 @@ ExternalProject_Add(libkvscproducer-download
 	GIT_TAG           v1.4.1
 	SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/kvscproducer-src"
 	BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/kvscproducer-build"
-	PATCH_COMMAND 	  git checkout . && git apply ${PROJECT_SOURCE_DIR}/../../CMake/Dependencies/static_patch.patch
+	PATCH_COMMAND 	  git checkout . && git apply --ignore-whitespace ${PROJECT_SOURCE_DIR}/../../CMake/Dependencies/static_patch.patch
 	CONFIGURE_COMMAND ""
 	BUILD_COMMAND     ""
 	INSTALL_COMMAND   ""
