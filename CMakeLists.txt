@@ -176,11 +176,10 @@ target_include_directories(KinesisVideoProducer PUBLIC
 )
 
 target_link_libraries(KinesisVideoProducer
-PRIVATE
+PUBLIC
   PkgConfig::kvsCommonCurl
   PkgConfig::cproducer
   PkgConfig::curl
-PUBLIC
   PkgConfig::log4cplus
 )
 
