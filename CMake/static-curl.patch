@@ -1,0 +1,19 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c3f3ebf..cc2dd6e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -139,12 +139,8 @@ else()
+ endif()
+ 
+ if(BUILD_COMMON_CURL)
+-  if (WIN32)
+-    find_package(CURL REQUIRED)
+-    set(CURL_LIBRARIES CURL::libcurl)
+-  else()
+-    pkg_check_modules(CURL REQUIRED libcurl)
+-  endif()
++  find_package(CURL REQUIRED)
++  set(CURL_LIBRARIES CURL::libcurl)
+ 
+   set(OPEN_SRC_INCLUDE_DIRS ${OPEN_SRC_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
+   link_directories(${CURL_LIBRARY_DIRS})
