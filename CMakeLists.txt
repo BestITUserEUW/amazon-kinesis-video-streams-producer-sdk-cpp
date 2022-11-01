@@ -27,7 +27,7 @@ option(BUILD_GSTREAMER_PLUGIN "Build kvssink GStreamer plugin" ON)
 option(BUILD_JNI "Build C++ wrapper for JNI to expose the functionality to Java/Android" OFF)
 option(BUILD_STATIC "Build with static linkage" ON)
 option(ADD_MUCLIBC "Add -muclibc c flag" OFF)
-option(BUILD_DEPENDENCIES "Whether or not to build depending libraries from source" ON)
+option(BUILD_DEPENDENCIES "Whether or not to build depending libraries from source" OFF)
 option(BUILD_OPENSSL_PLATFORM "If buildng OpenSSL what is the target platform" OFF)
 option(BUILD_LOG4CPLUS_HOST "Specify host-name for log4cplus for cross-compilation" OFF)
 
@@ -184,9 +184,6 @@ PUBLIC
   PkgConfig::log4cplus
 )
 
-set(pkgconfig_install_dir "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
-set(pkg_config "${CMAKE_BINARY_DIR}/KinesisVideoProducer.pc")
-
 install(DIRECTORY src/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" PATTERN "*.cpp" EXCLUDE)
 
 install(
@@ -195,23 +192,6 @@ install(
     LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
 )
-
-if (IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
-    set(PKG_CONFIG_INCLUDEDIR "${CMAKE_INSTALL_INCLUDEDIR}")
-else()
-    set(PKG_CONFIG_INCLUDEDIR "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
-endif()
-if (IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
-    set(PKG_CONFIG_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
-else()
-    set(PKG_CONFIG_LIBDIR "\${exec_prefix}/${CMAKE_INSTALL_LIBDIR}")
-endif()
-
-get_target_property(PKG_CONFIG_DEFINES KinesisVideoProducer INTERFACE_COMPILE_DEFINITIONS)
-string(REPLACE ";" " -D" PKG_CONFIG_DEFINES "${PKG_CONFIG_DEFINES}")
-string(CONCAT PKG_CONFIG_DEFINES "-D" "${PKG_CONFIG_DEFINES}")
-configure_file("CMake/KinesisVideoProducer.pc.in" "${pkg_config}" @ONLY)
-install(FILES "${pkg_config}" DESTINATION "${pkgconfig_install_dir}")
 
 if(BUILD_GSTREAMER_PLUGIN)
   pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
