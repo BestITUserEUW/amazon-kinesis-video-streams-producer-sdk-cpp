@@ -183,7 +183,8 @@ target_include_directories(KinesisVideoProducer PUBLIC
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common
 )
 
-target_link_libraries(KinesisVideoProducer PUBLIC
+target_link_libraries(KinesisVideoProducer
+PUBLIC
   kvsCommonCurl
   cproducer
   ${LIBCURL_LIBRARIES}
