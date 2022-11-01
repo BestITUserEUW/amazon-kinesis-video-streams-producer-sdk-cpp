@@ -46,6 +46,7 @@ get_filename_component(ROOT "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 
 # static settings
 if(BUILD_STATIC)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
   set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
   set(LINKAGE STATIC)
 elseif(WIN32)
@@ -68,7 +69,7 @@ endif()
 # pass ca cert location to sdk
 add_definitions(-DKVS_CA_CERT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/certs/cert.pem")
 add_definitions(-DCMAKE_DETECTED_CACERT_PATH)
-message(${CMAKE_CURRENT_BINARY_DIR}/dependency/libkvscproducer/kvscproducer-src)
+
 set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:${CMAKE_CURRENT_BINARY_DIR}/dependency/libkvscproducer/kvscproducer-src")
 
 if(BUILD_DEPENDENCIES)
