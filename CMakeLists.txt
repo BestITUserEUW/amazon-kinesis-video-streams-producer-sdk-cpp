@@ -118,10 +118,16 @@ add_subdirectory(${DEPENDENCY_DOWNLOAD_PATH}/libkvscproducer/kvscproducer-src EX
 
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_search_module(cproducer REQUIRED IMPORTED_TARGET libcproducer)
-pkg_search_module(kvsCommonCurl REQUIRED IMPORTED_TARGET libkvsCommonCurl)
+
+if (OPEN_SRC_INSTALL_PREFIX)
+  find_package(CURL REQUIRED PATHS ${OPEN_SRC_INSTALL_PREFIX})
+else()
+  find_package(CURL REQUIRED)
+endif()
+
+set(OPEN_SRC_INCLUDE_DIRS ${OPEN_SRC_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
+link_directories(${CURL_LIBRARY_DIRS})
 pkg_search_module(log4cplus REQUIRED IMPORTED_TARGET log4cplus)
-pkg_search_module(curl REQUIRED IMPORTED_TARGET libcurl)
 
 
 if (WIN32)
@@ -170,17 +176,17 @@ add_library(KinesisVideoProducer ${LINKAGE} ${PRODUCER_CPP_SOURCE_FILES})
 target_include_directories(KinesisVideoProducer PUBLIC
   ${PIC_HEADERS}
   ${KinesisVideoProducerC_SOURCE_DIR}/src/include
+  ${OPEN_SRC_INCLUDE_DIRS}
   ${KINESIS_VIDEO_OPEN_SOURCE_SRC}/include
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/credential-providers
   ${KINESIS_VIDEO_PRODUCER_CPP_SRC}/src/common
 )
 
-target_link_libraries(KinesisVideoProducer
-PUBLIC
-  PkgConfig::kvsCommonCurl
-  PkgConfig::cproducer
-  PkgConfig::curl
+target_link_libraries(KinesisVideoProducer PUBLIC
+  kvsCommonCurl
+  cproducer
+  ${LIBCURL_LIBRARIES}
   PkgConfig::log4cplus
 )
 
