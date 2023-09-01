@@ -654,11 +654,10 @@ void kinesis_video_init(CustomData *data) {
         LOG_AND_THROW("No valid credential method was found");
     }
 
-    data->kinesis_video_producer = KinesisVideoProducer::createSync(std::move(device_info_provider),
-                                                                    std::move(client_callback_provider),
-                                                                    std::move(stream_callback_provider),
-                                                                    std::move(credential_provider),
-                                                                    API_CALL_CACHE_TYPE_ALL,
+    data->kinesis_video_producer = KinesisVideoProducer::createSync(move(device_info_provider),
+                                                                    move(client_callback_provider),
+                                                                    move(stream_callback_provider),
+                                                                    move(credential_provider),
                                                                     defaultRegionStr);
 
     LOG_DEBUG("Client is ready");
@@ -690,7 +689,6 @@ void kinesis_video_stream_init(CustomData *data) {
         DEFAULT_FRAGMENT_ACKS,
         DEFAULT_RESTART_ON_ERROR,
         DEFAULT_RECALCULATE_METRICS,
-        true,
         NAL_ADAPTATION_FLAG_NONE,
         DEFAULT_STREAM_FRAMERATE,
         DEFAULT_AVG_BANDWIDTH_BPS,
@@ -706,7 +704,7 @@ void kinesis_video_stream_init(CustomData *data) {
         DEFAULT_VIDEO_TRACKID));
 
     stream_definition->addTrack(DEFAULT_AUDIO_TRACKID, DEFAULT_AUDIO_TRACK_NAME, DEFAULT_AUDIO_CODEC_ID, MKV_TRACK_INFO_TYPE_AUDIO);
-    data->kinesis_video_stream = data->kinesis_video_producer->createStreamSync(std::move(stream_definition));
+    data->kinesis_video_stream = data->kinesis_video_producer->createStreamSync(move(stream_definition));
     data->stream_started.clear();
 
     // since we are starting new putMedia, timestamp need not be padded.
